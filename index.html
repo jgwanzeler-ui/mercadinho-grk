@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERCADINHO GRK MARAMBAIA</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; padding-bottom: 220px; }
+  h1 { color: #2c3e50; text-align: center; margin: 8px 0; }
+  .info { text-align: center; color: #666; margin-bottom: 16px; font-size: 13px; }
+  .filtros { background: white; padding: 12px; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .filtros input, .filtros select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 8px; }
+  .produto { background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; gap: 12px; align-items: center; }
+  .produto img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+  .produto .sem-foto { width: 70px; height: 70px; background: #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 11px; flex-shrink: 0; }
+  .produto .info-produto { flex: 1; }
+  .nome { font-weight: bold; color: #333; }
+  .categoria { color: #888; font-size: 12px; margin-bottom: 4px; }
+  .preco { color: #27ae60; font-size: 18px; font-weight: bold; margin-top: 4px; }
+  .estoque { color: #999; font-size: 12px; }
+  .btn-add { background: #3498db; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+  .btn-add:hover { background: #2980b9; }
+  .btn-add:disabled { background: #ccc; cursor: not-allowed; }
+  .esgotado { color: #e74c3c; font-weight: bold; font-size: 13px; }
+  .carrinho { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -2px 8px rgba(0,0,0,0.15); padding: 12px 16px; max-height: 55vh; overflow-y: auto; z-index: 999; }
+  .carrinho h3 { margin: 0 0 8px 0; font-size: 15px; color: #333; }
+  .item-carrinho { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 13px; gap: 8px; }
+  .item-carrinho .nome-item { flex: 1; }
+  .item-carrinho .controles { display: flex; align-items: center; gap: 4px; }
+  .btn-qtd { background: #3498db; color: white; border: none; width: 26px; height: 26px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
+  .btn-qtd:hover { background: #2980b9; }
+  .btn-remover { background: #e74c3c; color: white; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 12px; padding: 0; }
+  .btn-remover:hover { background: #c0392b; }
+  .qtd-item { min-width: 22px; text-align: center; font-weight: bold; }
+  .subtotal-item { min-width: 70px; text-align: right; font-weight: bold; color: #27ae60; }
+  .carrinho .total { font-weight: bold; color: #27ae60; font-size: 16px; margin: 8px 0; text-align: right; }
+  .btn-finalizar { display: block; background: #27ae60; color: white; text-align: center; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 15px; border: none; width: 100%; cursor: pointer; margin-top: 8px; }
+  .btn-finalizar:hover { background: #219150; }
+  .btn-limpar { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-top: 4px; }
+  .btn-magic { display: block; background: #25D366; color: white; text-align: center; padding: 14px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; margin: 12px 0; }
+  .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
+  .modal-content { background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-content h2 { margin: 0 0 16px 0; color: #333; text-align: center; }
+  .modal-content label { display: block; margin: 12px 0 4px 0; font-weight: bold; color: #555; font-size: 14px; }
+  .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+  .modal-content textarea { min-height: 60px; resize: vertical; }
+  .modal-content .obrigatorio { color: #e74c3c; }
+  .modal-botoes { display: flex; gap: 8px; margin-top: 20px; }
+  .btn-cancelar { flex: 1; background: #ccc; color: #333; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+  .btn-enviar { flex: 2; background: #25D366; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+  .btn-enviar:hover { background: #128C7E; }
+  .resumo-pedido { background: #f0f8f4; border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 13px; }
+  .resumo-pedido .linha { display: flex; justify-content: space-between; padding: 2px 0; }
+  .resumo-pedido .total { font-weight: bold; color: #27ae60; border-top: 1px solid #ccc; padding-top: 6px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<h1>MERCADINHO GRK MARAMBAIA</h1>
+<p class="info">Atualizado em 27/09/2026 21:21</p>
+<a class="btn-magic" href="https://wa.me/5591992341991?text=Ola%21+Vim+pela+vitrine." target="_blank">💬 Falar direto no WhatsApp</a>
+<div class="filtros">
+  <input type="text" id="busca" placeholder="Buscar produto..." oninput="filtrar()">
+  <select id="categoria" onchange="filtrar()">
+    <option value="">Todas as categorias</option>
+    <option value="Mercearia e Basicos">Mercearia e Basicos</option>
+    <option value="Hortifruti">Hortifruti</option>
+    <option value="Limpeza">Limpeza</option>
+    <option value="Bebidas">Bebidas</option>
+  </select>
+</div>
+<div id="lista-produtos">
+<div class="produto" data-nome="sabao_barra" data-categoria="Limpeza">
+  <div class="sem-foto">sem foto</div>
+  <div class="info-produto">
+    <div class="nome">SABAO_BARRA</div>
+    <div class="categoria">Limpeza</div>
+    <div class="estoque">Disponivel: 30</div>
+    <div class="preco">R$ 4,00</div>
+  </div>
+  <button class="btn-add" onclick="adicionar('SABAO_BARRA', 4.0)">Adicionar</button>
+</div>
+<div class="produto" data-nome="arroz" data-categoria="Mercearia e Basicos">
+  <div class="sem-foto">sem foto</div>
+  <div class="info-produto">
+    <div class="nome">arroz</div>
+    <div class="categoria">Mercearia e Basicos</div>
+    <div class="estoque">Disponivel: 45</div>
+    <div class="preco">R$ 4,90</div>
+  </div>
+  <button class="btn-add" onclick="adicionar('arroz', 4.9)">Adicionar</button>
+</div>
+<div class="produto" data-nome="acucar" data-categoria="Mercearia e Basicos">
+  <div class="sem-foto">sem foto</div>
+  <div class="info-produto">
+    <div class="nome">ACUCAR</div>
+    <div class="categoria">Mercearia e Basicos</div>
+    <div class="estoque">Disponivel: 26</div>
+    <div class="preco">R$ 4,90</div>
+  </div>
+  <button class="btn-add" onclick="adicionar('ACUCAR', 4.9)">Adicionar</button>
+</div>
+<div class="produto" data-nome="cafe" data-categoria="Mercearia e Basicos">
+  <div class="sem-foto">sem foto</div>
+  <div class="info-produto">
+    <div class="nome">cafe</div>
+    <div class="categoria">Mercearia e Basicos</div>
+    <div class="estoque">Disponivel: 10</div>
+    <div class="preco">R$ 12,96</div>
+  </div>
+  <button class="btn-add" onclick="adicionar('cafe', 12.96)">Adicionar</button>
+</div>
+<div class="produto" data-nome="arroz teste" data-categoria="Mercearia e Basicos">
+  <div class="sem-foto">sem foto</div>
+  <div class="info-produto">
+    <div class="nome">ARROZ TESTE</div>
+    <div class="categoria">Mercearia e Basicos</div>
+    <div class="estoque">Disponivel: 49</div>
+    <div class="preco">R$ 4,90</div>
+  </div>
+  <button class="btn-add" onclick="adicionar('ARROZ TESTE', 4.9)">Adicionar</button>
+</div>
+<div class="produto" data-nome="banana" data-categoria="Hortifruti">
+  <div class="sem-foto">sem foto</div>
+  <div class="info-produto">
+    <div class="nome">BANANA</div>
+    <div class="categoria">Hortifruti</div>
+    <div class="estoque">Disponivel: 19</div>
+    <div class="preco">R$ 6,00</div>
+  </div>
+  <button class="btn-add" onclick="adicionar('BANANA', 6.0)">Adicionar</button>
+</div>
+<div class="produto" data-nome="teste perda" data-categoria="Bebidas">
+  <div class="sem-foto">sem foto</div>
+  <div class="info-produto">
+    <div class="nome">TESTE PERDA</div>
+    <div class="categoria">Bebidas</div>
+    <div class="estoque">Disponivel: 17</div>
+    <div class="preco">R$ 5,00</div>
+  </div>
+  <button class="btn-add" onclick="adicionar('TESTE PERDA', 5.0)">Adicionar</button>
+</div>
+<div class="produto" data-nome="sal 10" data-categoria="Mercearia e Basicos">
+  <div class="sem-foto">sem foto</div>
+  <div class="info-produto">
+    <div class="nome">SAL 10</div>
+    <div class="categoria">Mercearia e Basicos</div>
+    <div class="estoque">Disponivel: 2</div>
+    <div class="preco">R$ 2,00</div>
+  </div>
+  <button class="btn-add" onclick="adicionar('SAL 10', 2.0)">Adicionar</button>
+</div>
+</div>
+<div class="carrinho" id="carrinho">
+  <h3>🛒 Meu Pedido</h3>
+  <div id="itens-carrinho"><em>Carrinho vazio</em></div>
+  <div class="total" id="total">Total: R$ 0,00</div>
+  <button class="btn-finalizar" onclick="abrirFormulario()">📝 Finalizar Pedido</button>
+  <button class="btn-limpar" onclick="limparCarrinho()">Limpar carrinho</button>
+</div>
+<div id="modal-pedido" class="modal">
+  <div class="modal-content">
+    <h2>📝 Finalizar Pedido</h2>
+    <div class="resumo-pedido" id="resumo-pedido"></div>
+    <label>Seu nome <span class="obrigatorio">*</span></label>
+    <input type="text" id="campo-nome" placeholder="Ex: Joao Silva">
+    <label>Telefone / WhatsApp <span class="obrigatorio">*</span></label>
+    <input type="tel" id="campo-telefone" placeholder="(91) 99999-9999">
+    <label>Endereco completo <span class="obrigatorio">*</span></label>
+    <textarea id="campo-endereco" placeholder="Rua, numero, bairro, ponto de referencia"></textarea>
+    <label>Forma de pagamento <span class="obrigatorio">*</span></label>
+    <select id="campo-pagamento">
+      <option value="Dinheiro">Dinheiro</option>
+      <option value="Pix">Pix</option>
+      <option value="Cartao">Cartao</option>
+    </select>
+    <label>Troco para quanto? (se dinheiro)</label>
+    <input type="text" id="campo-troco" placeholder="Ex: R$ 100,00">
+    <label>Observacoes (opcional)</label>
+    <textarea id="campo-observacoes" placeholder="Ex: entregar apos 18h"></textarea>
+    <div class="modal-botoes">
+      <button class="btn-cancelar" onclick="fecharFormulario()">Cancelar</button>
+      <button class="btn-enviar" onclick="enviarPedido()">📲 Enviar pelo WhatsApp</button>
+    </div>
+  </div>
+</div>
+<script>
+  let carrinho = [];
+  const TELEFONE = '5591992341991';
+  const NOME_LOJA = 'MERCADINHO GRK MARAMBAIA';
+
+  function adicionar(nome, preco) {
+    const item = carrinho.find(i => i.nome === nome);
+    if (item) { item.qtd++; } else { carrinho.push({nome, preco, qtd: 1}); }
+    atualizarCarrinho();
+  }
+
+  function aumentar(index) {
+    carrinho[index].qtd++;
+    atualizarCarrinho();
+  }
+
+  function diminuir(index) {
+    if (carrinho[index].qtd > 1) {
+      carrinho[index].qtd--;
+    } else {
+      removerItem(index);
+      return;
+    }
+    atualizarCarrinho();
+  }
+
+  function removerItem(index) {
+    carrinho.splice(index, 1);
+    atualizarCarrinho();
+  }
+
+  function atualizarCarrinho() {
+    const div = document.getElementById('itens-carrinho');
+    if (carrinho.length === 0) {
+      div.innerHTML = '<em>Carrinho vazio</em>';
+      document.getElementById('total').textContent = 'Total: R$ 0,00';
+      return;
+    }
+    let html = '', total = 0;
+    carrinho.forEach((item, idx) => {
+      const sub = item.preco * item.qtd;
+      total += sub;
+      html += '<div class="item-carrinho">';
+      html += '<span class="nome-item">' + item.nome + '</span>';
+      html += '<div class="controles">';
+      html += '<button class="btn-qtd" onclick="diminuir(' + idx + ')">−</button>';
+      html += '<span class="qtd-item">' + item.qtd + '</span>';
+      html += '<button class="btn-qtd" onclick="aumentar(' + idx + ')">+</button>';
+      html += '<span class="subtotal-item">R$ ' + sub.toFixed(2).replace('.', ',') + '</span>';
+      html += '<button class="btn-remover" onclick="removerItem(' + idx + ')">🗑️</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+    div.innerHTML = html;
+    document.getElementById('total').textContent = 'Total: R$ ' + total.toFixed(2).replace('.', ',');
+  }
+
+  function limparCarrinho() {
+    if (carrinho.length === 0) return;
+    if (!confirm('Limpar todo o carrinho?')) return;
+    carrinho = [];
+    atualizarCarrinho();
+  }
+
+  function abrirFormulario() {
+    if (carrinho.length === 0) {
+      alert('Adicione produtos antes de finalizar!');
+      return;
+    }
+    let resumo = '', total = 0;
+    carrinho.forEach(i => {
+      const sub = i.preco * i.qtd;
+      total += sub;
+      resumo += '<div class="linha"><span>' + i.qtd + 'x ' + i.nome + '</span><span>R$ ' + sub.toFixed(2).replace('.', ',') + '</span></div>';
+    });
+    resumo += '<div class="linha total"><span>TOTAL</span><span>R$ ' + total.toFixed(2).replace('.', ',') + '</span></div>';
+    document.getElementById('resumo-pedido').innerHTML = resumo;
+    const dadosSalvos = localStorage.getItem('pdv_cliente_dados');
+    if (dadosSalvos) {
+      try {
+        const d = JSON.parse(dadosSalvos);
+        if (d.nome) document.getElementById('campo-nome').value = d.nome;
+        if (d.telefone) document.getElementById('campo-telefone').value = d.telefone;
+        if (d.endereco) document.getElementById('campo-endereco').value = d.endereco;
+      } catch(e) { console.error(e); }
+    }
+    document.getElementById('modal-pedido').style.display = 'flex';
+  }
+
+  function fecharFormulario() {
+    document.getElementById('modal-pedido').style.display = 'none';
+  }
+
+  function enviarPedido() {
+    const nome = document.getElementById('campo-nome').value.trim();
+    const telefone = document.getElementById('campo-telefone').value.trim();
+    const endereco = document.getElementById('campo-endereco').value.trim();
+    const pagamento = document.getElementById('campo-pagamento').value;
+    const troco = document.getElementById('campo-troco').value.trim();
+    const observacoes = document.getElementById('campo-observacoes').value.trim();
+    if (!nome) { alert('Informe seu nome.'); document.getElementById('campo-nome').focus(); return; }
+    if (!telefone) { alert('Informe seu telefone.'); document.getElementById('campo-telefone').focus(); return; }
+    if (!endereco) { alert('Informe seu endereco.'); document.getElementById('campo-endereco').focus(); return; }
+    localStorage.setItem('pdv_cliente_dados', JSON.stringify({nome, telefone, endereco}));
+    let msg = '*NOVO PEDIDO - ' + NOME_LOJA + '*\n\n';
+    msg += '*Cliente:* ' + nome + '\n';
+    msg += '*Telefone:* ' + telefone + '\n';
+    msg += '*Endereco:* ' + endereco + '\n';
+    msg += '*Pagamento:* ' + pagamento + '\n';
+    if (troco) msg += '*Troco para:* ' + troco + '\n';
+    if (observacoes) msg += '*Obs:* ' + observacoes + '\n';
+    msg += '\n*ITENS DO PEDIDO:*\n';
+    let total = 0;
+    carrinho.forEach(i => {
+      const sub = i.preco * i.qtd;
+      total += sub;
+      msg += '• ' + i.qtd + 'x ' + i.nome + ' — R$ ' + sub.toFixed(2).replace('.', ',') + '\n';
+    });
+    msg += '\n*TOTAL: R$ ' + total.toFixed(2).replace('.', ',') + '*';
+    msg += '\n\nAguardo confirmacao. Obrigado!';
+    const url = 'https://wa.me/' + TELEFONE + '?text=' + encodeURIComponent(msg);
+    window.open(url, '_blank');
+    fecharFormulario();
+    carrinho = [];
+    atualizarCarrinho();
+  }
+
+  function filtrar() {
+    const busca = document.getElementById('busca').value.toLowerCase();
+    const cat = document.getElementById('categoria').value;
+    document.querySelectorAll('.produto').forEach(el => {
+      const nomeOk = el.dataset.nome.includes(busca);
+      const catOk = !cat || el.dataset.categoria === cat;
+      el.style.display = (nomeOk && catOk) ? 'flex' : 'none';
+    });
+  }
+
+  document.getElementById('modal-pedido').addEventListener('click', function(e) {
+    if (e.target === this) fecharFormulario();
+  });
+</script>
+</body>
+</html>
